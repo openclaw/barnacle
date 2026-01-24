@@ -2,6 +2,7 @@ import {
 	AutoModerationActionExecutionListener,
 	type Client,
 	type ListenerEventData,
+	Container,
 	ListenerEvent,
 	Routes,
 	TextDisplay,
@@ -9,7 +10,12 @@ import {
 } from "@buape/carbon"
 import { readFile } from "node:fs/promises"
 
-type AutomodMessageMap = Record<string, string>
+type AutomodRuleConfig = {
+	trigger: string
+	message: string
+}
+
+type AutomodMessageMap = Record<string, AutomodRuleConfig>
 
 type AutoModerationActionExecutionData =
 	ListenerEventData[typeof ListenerEvent.AutoModerationActionExecution]
@@ -28,6 +34,8 @@ const loadAutomodMessages = async (): Promise<AutomodMessageMap> => {
 	}
 }
 
+const escapeRegExp = (value: string) => value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
+
 const formatAutomodMessage = (template: string, data: AutoModerationActionExecutionData) =>
 	template
 		.replaceAll("{user}", `<@${data.user_id}>`)
@@ -41,19 +49,40 @@ export default class AutoModerationActionExecution extends AutoModerationActionE
 		}
 
 		const messages = await loadAutomodMessages()
-		const keyword = normalizeKeyword(data.matched_keyword)
-		const normalizedMessages = Object.fromEntries(
-			Object.entries(messages).map(([key, value]) => [normalizeKeyword(key), value])
-		)
-		const template = normalizedMessages[keyword]
+		const ruleConfig = messages[data.rule_id]
 
-		if (!template) {
+		if (!ruleConfig) {
 			return
 		}
 
-		const content = formatAutomodMessage(template, data)
+		if (!data.matched_keyword) {
+			return
+		}
+
+		const trigger = normalizeKeyword(ruleConfig.trigger)
+		const matchedKeyword = normalizeKeyword(data.matched_keyword)
+
+		if (trigger !== matchedKeyword) {
+			return
+		}
+
+		const sourceContent = data.content || data.matched_content || ""
+		const redactedContent = sourceContent
+			? sourceContent.replace(
+				new RegExp(escapeRegExp(ruleConfig.trigger), "gi"),
+				"<redacted>"
+			)
+			: "<redacted>"
+
+		const warningMessage = formatAutomodMessage(ruleConfig.message, data)
 		const payload = serializePayload({
-			components: [new TextDisplay(content)],
+			components: [
+				new Container([
+					new TextDisplay("Original Message"),
+					new TextDisplay(redactedContent)
+				]),
+				new TextDisplay(warningMessage)
+			],
 			allowedMentions: {
 				users: [data.user_id]
 			}
