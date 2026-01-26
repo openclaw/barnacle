@@ -4,13 +4,10 @@ import {
 	type ListenerEventData,
 	ListenerEvent,
 	Routes,
-	Section,
-	TextDisplay,
 	Webhook,
 	serializePayload,
 	type MessagePayloadObject
 } from "@buape/carbon"
-import AutomodConfirmButton from "../components/automodConfirmButton.js"
 import { readFile } from "node:fs/promises"
 
 type AutomodRuleConfig = {
@@ -114,7 +111,7 @@ const sendWebhookMessage = async (webhook: Webhook, payload: WebhookSendPayload)
 		...payload,
 		allowedMentions: { parse: [] }
 	})
-	await webhook.rest.post(webhook.urlWithOptions({ wait: true, withComponents: true }), {
+	await webhook.rest.post(webhook.urlWithOptions({ wait: true }), {
 		body: serialized
 	})
 }
@@ -162,22 +159,15 @@ export default class AutoModerationActionExecution extends AutoModerationActionE
 		const repostContent = shouldRedact ? redactedContent : sourceContent || "<redacted>"
 
 		const warningMessage = formatAutomodMessage(activeRule.message, data)
-		const warningComponents = [new TextDisplay(warningMessage)]
+		const warningLines = [warningMessage]
 		if (activeRule.confirmRoleId) {
-			warningComponents.push(
-				new Section(
-					[
-						new TextDisplay(
-							"Need the crustacean crew? Tap to request a mod splash."
-						)
-					],
-					new AutomodConfirmButton(activeRule.confirmRoleId)
-				)
+			warningLines.push(
+				`Need the crustacean crew? Ping <@&${activeRule.confirmRoleId}> to request a mod splash.`
 			)
 		}
 
 		const warningPayload = serializePayload({
-			components: warningComponents,
+			content: warningLines.join("\n\n"),
 			allowedMentions: {
 				users: [data.user_id]
 			}
@@ -200,7 +190,7 @@ export default class AutoModerationActionExecution extends AutoModerationActionE
 				undefined
 
 			await sendWebhookMessage(webhook, {
-				components: [new TextDisplay(repostContent)],
+				content: repostContent,
 				username: displayName,
 				avatar_url: avatarUrl
 			})
