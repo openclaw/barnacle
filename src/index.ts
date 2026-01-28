@@ -2,6 +2,7 @@ import { Client } from "@buape/carbon"
 import { GatewayIntents, GatewayPlugin } from "@buape/carbon/gateway"
 import { createServer } from "@buape/carbon/adapters/bun"
 import GithubCommand from "./commands/github.js"
+import AnswerOverflowCommand from "./commands/answeroverflow.js"
 import GotoRootCommand from "./commands/goto.js"
 import ApplicationAuthorized from "./events/authorized.js"
 import AutoModerationActionExecution from "./events/autoModerationActionExecution.js"
@@ -32,6 +33,7 @@ const client = new Client(
 	{
 		commands: [
 			new GithubCommand(),
+			new AnswerOverflowCommand(),
 			new GotoRootCommand()
 		],
 		listeners: [
