@@ -40,6 +40,12 @@ class GotoDocsCommand extends GotoCommand {
 	protected message = "Docs are available at <https://docs.molt.bot>."
 }
 
+class GotoSecurityCommand extends GotoCommand {
+	name = "security"
+	description = "Share the security docs link"
+	protected message = "Security docs are available at <https://docs.molt.bot/security>."
+}
+
 class GotoInstallCommand extends GotoCommand {
 	name = "install"
 	description = "Share the install script link"
@@ -56,6 +62,7 @@ export default class GotoRootCommand extends CommandWithSubcommands {
 		new GotoGuideCommand(),
 		new GotoStuckCommand(),
 		new GotoDocsCommand(),
+		new GotoSecurityCommand(),
 		new GotoInstallCommand()
 	]
 }
