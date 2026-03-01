@@ -22,6 +22,12 @@ class GotoHelpCommand extends GotoCommand {
 	protected message = `Use <#1459642797895319552> for help. The fastest way to get your problem solved is to follow the instructions here: <${stuckLink}>`
 }
 
+class GotoUserHelpCommand extends GotoCommand {
+	name = "user-help"
+	description = "Share users-helping-users instructions"
+	protected message = `Please move your conversation to <#1459007081603403828>. You can help others with OpenClaw there.`
+}
+
 class GotoModelCommand extends GotoCommand {
 	name = "model"
 	description = "Point to the model discussion channel"
@@ -64,6 +70,7 @@ export default class GotoRootCommand extends CommandWithSubcommands {
 	subcommands = [
 		new GotoModelCommand(),
 		new GotoHelpCommand(),
+		new GotoUserHelpCommand(),
 		new GotoServerFaqCommand(),
 		new GotoGuideCommand(),
 		new GotoStuckCommand(),
